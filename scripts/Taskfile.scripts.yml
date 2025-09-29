@@ -635,3 +635,36 @@ tasks:
           kubectl exec -it {{.postgres_container_name}} \
           -n {{.postgres_database_namespace}} \
           -- /bin/bash /tmp/init.sh "{{.postgres_username}}" "{{.postgres_readonly_username}}" "{{.postgres_readonly_password}}"
+
+  default:minimal:
+    deps:
+      - task: "init"
+    cmds:
+      - task: "install:kubectl:darwin"
+      - task: "install:kubectl:linux"
+      - task: "install:minimal"
+      - task: "start"
+
+  install:minimal:
+    desc: solo init, solo cluster-ref config create, solo keys consensus generate, solo consensus network deploy
+    deps:
+      - task: "init"
+    cmds:
+      - task: "cluster:create"
+      - task: "solo:init"
+      - task: "solo:cluster:setup"
+      - task: "solo:cluster-ref:connect"
+      - task: "solo:deployment:create"
+      - task: "solo:deployment:attach"
+      - task: "solo:keys"
+      - task: "solo:network:deploy"
+
+  minimal-with-relay:
+    desc: minimal deployment with mirror and JSON RPC relay
+    deps:
+      - task: "init"
+    cmds:
+      - task: "default:minimal"
+      - task: "solo:mirror-node"
+      - task: "solo:explorer"
+      - task: "solo:relay"
